@@ -1,0 +1,10 @@
+{
+	"id": "pinyin-companion",
+	"name": "Pinyin Companion",
+	"version": "0.1.0",
+	"minAppVersion": "1.5.7",
+	"description": "Add tone-marked pinyin after Chinese words and phrases, using the Chinese characters to choose and correct the pinyin. Works offline.",
+	"author": "Katana",
+	"isDesktopOnly": false,
+	"authorUrl": "https://github.com/katananananna"
+}

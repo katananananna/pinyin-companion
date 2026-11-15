@@ -1,0 +1,14 @@
+/* Pinyin Companion: chooser and suggestion notice */
+.pinyin-companion-option {
+	font-size: var(--font-ui-medium);
+}
+
+.pinyin-companion-option-note {
+	display: block;
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+}
+
+.pinyin-companion-notice-button {
+	margin: var(--size-4-1) var(--size-4-1) 0 0;
+}
