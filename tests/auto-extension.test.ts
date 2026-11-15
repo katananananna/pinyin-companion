@@ -5,27 +5,24 @@ import { EditorView } from '@codemirror/view';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { decideAutomatic } from '../src/core/decide';
 import { Pronouncer } from '../src/core/pronouncer';
-import { createAutoPinyinExtension, type AutoHost, type DocumentSuggestion } from '../src/editor/auto-extension';
+import { createAutoPinyinExtension, INSTANT_DELAY_MS, SETTLE_DELAY_MS, type AutoHost, type DocumentSuggestion } from '../src/editor/auto-extension';
 
 // jsdom does not implement layout; CodeMirror's measuring needs these to exist.
 Range.prototype.getClientRects = () => ({ length: 0, item: () => null, [Symbol.iterator]: [][Symbol.iterator] }) as unknown as DOMRectList;
 Range.prototype.getBoundingClientRect = () => new DOMRect();
 
-const DELAY = 700;
+const DELAY = SETTLE_DELAY_MS;
+const TICK = INSTANT_DELAY_MS + 1;
 const pronouncer = new Pronouncer({ markYiBuSandhi: false, overrides: new Map() });
 
 interface Harness {
 	view: EditorView;
 	suggestions: DocumentSuggestion[];
-	setEnabled(enabled: boolean): void;
 }
 
 function setup(doc: string, cursor = doc.length): Harness {
-	let enabled = true;
 	const suggestions: DocumentSuggestion[] = [];
 	const host: AutoHost = {
-		isEnabled: () => enabled,
-		idleDelayMs: () => DELAY,
 		decide: (line, pos) => decideAutomatic(line, pos, pronouncer, { separator: 'space', suggestions: true, bracketsOnly: false, removeBrackets: false }),
 		suggest: (_view, suggestion) => suggestions.push(suggestion),
 	};
@@ -37,7 +34,7 @@ function setup(doc: string, cursor = doc.length): Harness {
 		}),
 		parent: document.body,
 	});
-	return { view, suggestions, setEnabled: (value) => (enabled = value) };
+	return { view, suggestions };
 }
 
 /** Simulate typing at the cursor, one transaction per character like the browser does. */
@@ -63,26 +60,46 @@ describe('automatic mode in a CodeMirror editor', () => {
 		vi.useRealTimers();
 	});
 
-	test('converts after the idle delay, keeps the cursor at the end', () => {
-		harness = setup('我們在 ');
+	test('a complete exact match converts on the next tick and keeps the cursor at the end', () => {
+		harness = setup('學習 ');
 		type(harness.view, 'xuexi');
-		expect(doc(harness.view)).toBe('我們在 xuexi');
-		harness.view.dispatch({ changes: { from: 0, to: 3, insert: '學習' }, selection: EditorSelection.cursor(8), userEvent: 'input.type' });
-		vi.advanceTimersByTime(DELAY - 1);
 		expect(doc(harness.view)).toBe('學習 xuexi');
-		vi.advanceTimersByTime(1);
+		vi.advanceTimersByTime(TICK);
 		expect(doc(harness.view)).toBe('學習 xué xí');
 		expect(harness.view.state.selection.main.head).toBe('學習 xué xí'.length);
 	});
 
-	test('typing again before the delay postpones the check', () => {
+	test('an incomplete pinyin is left alone', () => {
+		harness = setup('學習 ');
+		type(harness.view, 'xue');
+		vi.advanceTimersByTime(DELAY * 3);
+		expect(doc(harness.view)).toBe('學習 xue');
+	});
+
+	test('a partial run (last characters only) waits for a pause', () => {
+		harness = setup('我們學習 ');
+		type(harness.view, 'xuexi');
+		vi.advanceTimersByTime(TICK);
+		expect(doc(harness.view)).toBe('我們學習 xuexi');
+		vi.advanceTimersByTime(DELAY);
+		expect(doc(harness.view)).toBe('我們學習 xué xí');
+	});
+
+	test('other plugins updating the selection do not cancel a pending conversion', () => {
+		harness = setup('我們學習 ');
+		type(harness.view, 'xuexi');
+		harness.view.dispatch({ selection: EditorSelection.cursor(harness.view.state.doc.length) });
+		vi.advanceTimersByTime(TICK + DELAY);
+		expect(doc(harness.view)).toBe('我們學習 xué xí');
+	});
+
+	test('keeps checking as you type and converts once complete', () => {
 		harness = setup('尚未成熟 ');
 		type(harness.view, 'shang wei cheng sh');
-		vi.advanceTimersByTime(DELAY - 100);
+		vi.advanceTimersByTime(TICK);
+		expect(doc(harness.view)).toBe('尚未成熟 shang wei cheng sh');
 		type(harness.view, 'u');
-		vi.advanceTimersByTime(DELAY - 100);
-		expect(doc(harness.view)).toBe('尚未成熟 shang wei cheng shu');
-		vi.advanceTimersByTime(100);
+		vi.advanceTimersByTime(TICK);
 		expect(doc(harness.view)).toBe('尚未成熟 shàng wèi chéng shú');
 	});
 
@@ -108,14 +125,6 @@ describe('automatic mode in a CodeMirror editor', () => {
 		harness.view.dispatch({ changes: { from: harness.view.state.doc.length, insert: ' ' } });
 		vi.advanceTimersByTime(DELAY);
 		expect(doc(harness.view)).toBe('學習 xuexi ');
-	});
-
-	test('does nothing while disabled', () => {
-		harness = setup('學習 ');
-		harness.setEnabled(false);
-		type(harness.view, 'xuexi');
-		vi.advanceTimersByTime(DELAY);
-		expect(doc(harness.view)).toBe('學習 xuexi');
 	});
 
 	test('never rewrites during IME composition', () => {

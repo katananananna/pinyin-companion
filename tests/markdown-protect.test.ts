@@ -65,11 +65,8 @@ describe('settings sanitising', () => {
 		expect(sanitizeSettings('nonsense')).toEqual({ ...DEFAULT_SETTINGS, overrides: [] });
 	});
 
-	test('clamps the delay, validates the separator and drops invalid overrides', () => {
+	test('drops invalid overrides and keeps valid ones', () => {
 		const result = sanitizeSettings({
-			autoMode: true,
-			idleDelayMs: 10,
-			separator: 'brackets',
 			overrides: [
 				{ phrase: '理髮', pinyin: 'li3 fa4' },
 				{ phrase: 'abc', pinyin: 'a b c' },
@@ -77,16 +74,14 @@ describe('settings sanitising', () => {
 				'junk',
 			],
 		});
-		expect(result.autoMode).toBe(true);
-		expect(result.idleDelayMs).toBe(300);
-		expect(result.separator).toBe('space');
 		expect(result.overrides).toEqual([{ phrase: '理髮', pinyin: 'lǐ fā' }]);
-		expect(sanitizeSettings({ idleDelayMs: 99999 }).idleDelayMs).toBe(5000);
 	});
 
-	test('trigger settings are validated', () => {
-		expect(sanitizeSettings({ autoTrigger: 'brackets', removeBrackets: true })).toMatchObject({ autoTrigger: 'brackets', removeBrackets: true });
-		expect(sanitizeSettings({ autoTrigger: 'weird', removeBrackets: 'yes' })).toMatchObject({ autoTrigger: 'anywhere', removeBrackets: false });
+	test('the brackets-only choice is validated and older settings are migrated', () => {
+		expect(sanitizeSettings({ bracketsOnly: true }).bracketsOnly).toBe(true);
+		expect(sanitizeSettings({ bracketsOnly: 'yes' }).bracketsOnly).toBe(false);
+		expect(sanitizeSettings({ autoTrigger: 'brackets', autoMode: false, idleDelayMs: 2000 }).bracketsOnly).toBe(true);
+		expect(sanitizeSettings({ autoTrigger: 'anywhere' }).bracketsOnly).toBe(false);
 	});
 
 	test('does not mutate the defaults', () => {

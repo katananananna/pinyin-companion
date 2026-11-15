@@ -3,7 +3,7 @@ import { correctPinyinAtCursor, insertPinyinAfterSelection, type CommandContext 
 import { decideAutomatic } from './core/decide';
 import type { Pronouncer } from './core/pronouncer';
 import { createAutoPinyinExtension } from './editor/auto-extension';
-import { createPronouncer, sanitizeSettings, type PinyinCompanionSettings } from './settings';
+import { createPronouncer, OUTPUT_SEPARATOR, REMOVE_BRACKETS, sanitizeSettings, type PinyinCompanionSettings } from './settings';
 import { PinyinCompanionSettingTab } from './settings-tab';
 import { SuggestionNotices } from './ui/suggestion-notice';
 
@@ -28,14 +28,12 @@ export default class PinyinCompanionPlugin extends Plugin {
 
 		this.registerEditorExtension(
 			createAutoPinyinExtension({
-				isEnabled: () => this.settings.autoMode,
-				idleDelayMs: () => this.settings.idleDelayMs,
 				decide: (line, cursor) =>
 					decideAutomatic(line, cursor, this.getPronouncer(), {
-						separator: this.settings.separator,
-						suggestions: this.settings.typoSuggestions,
-						bracketsOnly: this.settings.autoTrigger === 'brackets',
-						removeBrackets: this.settings.removeBrackets,
+						separator: OUTPUT_SEPARATOR,
+						suggestions: true,
+						bracketsOnly: this.settings.bracketsOnly,
+						removeBrackets: REMOVE_BRACKETS,
 					}),
 				suggest: (view, suggestion) => this.notices.show(view, suggestion),
 			}),
@@ -64,8 +62,8 @@ export default class PinyinCompanionPlugin extends Plugin {
 		return {
 			app: this.app,
 			pronouncer: this.getPronouncer(),
-			separator: this.settings.separator,
-			removeBrackets: this.settings.removeBrackets,
+			separator: OUTPUT_SEPARATOR,
+			removeBrackets: REMOVE_BRACKETS,
 		};
 	}
 }

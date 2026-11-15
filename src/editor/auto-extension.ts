@@ -2,10 +2,14 @@
  * CodeMirror 6 extension for automatic mode.
  *
  * Safety rules:
- * - Only typing (userEvent "input.type") schedules a check; paste, undo, redo,
- *   programmatic edits and this extension's own edits never do.
- * - The check runs after an idle delay, only for a single empty cursor, never
- *   during IME composition, and only looks at the cursor's line.
+ * - Only typed text schedules a check; paste, drop, undo, redo, deletions and
+ *   this extension's own edits never do. Unrelated selection or document updates
+ *   (other plugins, Obsidian itself) do not cancel a pending check, because the
+ *   check always re-reads the cursor line from the current state.
+ * - A complete, exact match (the pinyin for the whole run of Chinese before it)
+ *   converts straight away. Anything less certain (a partial run, a correction)
+ *   waits for a short pause. Both only act for a single empty cursor, never
+ *   during IME composition, and only look at the cursor's line.
  * - Fenced code, frontmatter and syntax-tree nodes for code/links/URLs/HTML are skipped.
  * - Each conversion is its own undo step (isolateHistory). An annotation that
  *   was converted (or suggested) once is remembered at its position, so after
@@ -17,13 +21,20 @@ import { Annotation, EditorSelection, type EditorState, type Extension, Transact
 import { EditorView, ViewPlugin, type PluginValue, type ViewUpdate } from '@codemirror/view';
 import type { SyntaxNode } from '@lezer/common';
 import type { AutoOutcome, Proposal } from '../core/decide';
+import { isHanChar } from '../core/chinese';
 import { blockContextAt } from '../core/markdown-protect';
 
 /** Marks transactions created by Pinyin Companion. */
 export const pinyinCompanionEdit = Annotation.define<boolean>();
 export const PINYIN_USER_EVENT = 'input.pinyin';
 
+/** Exact, complete matches convert on the next tick. */
+export const INSTANT_DELAY_MS = 0;
+/** Less certain matches wait for this pause in typing. */
+export const SETTLE_DELAY_MS = 700;
 const MAX_LINE_LENGTH = 4000;
+/** Input events that are not keystrokes. */
+const NON_TYPING_EVENTS = ['input.paste', 'input.drop', 'input.complete', 'input.pinyin'];
 const MAX_REMEMBERED = 50;
 const PROTECTED_NODE = /code|frontmatter|url|link|html|math|comment|hashtag/i;
 
@@ -34,8 +45,6 @@ export interface DocumentSuggestion {
 }
 
 export interface AutoHost {
-	isEnabled(): boolean;
-	idleDelayMs(): number;
 	decide(lineText: string, cursorInLine: number): AutoOutcome;
 	suggest(view: EditorView, suggestion: DocumentSuggestion): void;
 }
@@ -43,6 +52,23 @@ export interface AutoHost {
 interface Remembered {
 	pos: number;
 	text: string;
+}
+
+function isTypedInsertion(tr: Transaction): boolean {
+	if (!tr.docChanged || tr.annotation(pinyinCompanionEdit)) return false;
+	if (!tr.isUserEvent('input') || NON_TYPING_EVENTS.some((event) => tr.isUserEvent(event))) return false;
+	let inserted = false;
+	tr.changes.iterChanges((_fromA, _toA, _fromB, _toB, text) => {
+		if (text.length > 1 || text.line(1).length > 0) inserted = true;
+	});
+	return inserted;
+}
+
+/** True when the proposal annotates the whole run of Chinese directly before it. */
+function coversWholeRun(lineText: string, proposal: Proposal): boolean {
+	const before = lineText.slice(0, proposal.chineseFrom);
+	const previous = [...before].pop();
+	return previous === undefined || !isHanChar(previous);
 }
 
 export function isProtectedBySyntax(state: EditorState, pos: number): boolean {
@@ -75,12 +101,9 @@ class AutoPinyinPlugin implements PluginValue {
 		if (update.docChanged) {
 			this.remembered = this.remembered.map((r) => ({ pos: update.changes.mapPos(r.pos, -1), text: r.text }));
 		}
-		const typed = update.transactions.some(
-			(tr) => tr.docChanged && tr.isUserEvent('input.type') && !tr.annotation(pinyinCompanionEdit),
-		);
-		if (typed && this.host.isEnabled()) {
-			this.schedule();
-		} else if (update.docChanged || update.selectionSet) {
+		if (update.transactions.some(isTypedInsertion)) {
+			this.schedule(INSTANT_DELAY_MS, false);
+		} else if (update.transactions.some((tr) => tr.isUserEvent('undo') || tr.isUserEvent('redo'))) {
 			this.cancel();
 		}
 	}
@@ -93,9 +116,9 @@ class AutoPinyinPlugin implements PluginValue {
 		return this.view.dom.ownerDocument.defaultView ?? window;
 	}
 
-	private schedule(): void {
+	private schedule(delayMs: number, settled: boolean): void {
 		this.cancel();
-		this.timer = this.win().setTimeout(() => this.run(), this.host.idleDelayMs());
+		this.timer = this.win().setTimeout(() => this.run(settled), delayMs);
 	}
 
 	private cancel(): void {
@@ -111,19 +134,18 @@ class AutoPinyinPlugin implements PluginValue {
 		this.remembered = [...this.remembered, { pos, text }].slice(-MAX_REMEMBERED);
 	}
 
-	private run(): void {
+	private run(settled: boolean): void {
 		this.timer = null;
-		if (!this.host.isEnabled()) return;
 		try {
-			this.check();
+			this.check(settled);
 		} catch (error: unknown) {
 			console.error('Pinyin Companion: automatic check failed', error);
 		}
 	}
 
-	private check(): void {
-		if (this.view.composing || this.view.compositionStarted) {
-			this.schedule();
+	private check(settled: boolean): void {
+		if (this.view.composing) {
+			this.schedule(SETTLE_DELAY_MS, true);
 			return;
 		}
 		const { state } = this.view;
@@ -136,6 +158,11 @@ class AutoPinyinPlugin implements PluginValue {
 		if (outcome.type === 'none') return;
 		const first = outcome.type === 'apply' ? outcome.proposal : outcome.proposals[0];
 		if (!first) return;
+		const instant = outcome.type === 'apply' && first.kind === 'exact' && coversWholeRun(line.text, first);
+		if (!instant && !settled) {
+			this.schedule(SETTLE_DELAY_MS, true);
+			return;
+		}
 		const from = line.from + first.from;
 		const to = line.from + first.to;
 		if (isProtectedBySyntax(state, from) || isProtectedBySyntax(state, to)) return;

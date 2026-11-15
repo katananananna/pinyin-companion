@@ -1,9 +1,6 @@
 import { type App, Notice, PluginSettingTab, Setting } from 'obsidian';
 import { validateOverride } from './core/overrides';
 import type PinyinCompanionPlugin from './main';
-import { MAX_IDLE_DELAY_MS, MIN_IDLE_DELAY_MS } from './settings';
-
-const DELAY_STEP_MS = 100;
 
 export class PinyinCompanionSettingTab extends PluginSettingTab {
 	constructor(app: App, private readonly plugin: PinyinCompanionPlugin) {
@@ -16,57 +13,9 @@ export class PinyinCompanionSettingTab extends PluginSettingTab {
 		const settings = this.plugin.settings;
 
 		new Setting(containerEl)
-			.setName('Automatic mode')
-			.setDesc('After you pause typing, add tone marks when the pinyin you typed exactly matches the Chinese before it. Uncertain cases are never changed automatically.')
-			.addToggle((toggle) => toggle.setValue(settings.autoMode).onChange((value) => this.plugin.updateSettings({ autoMode: value })));
-
-		new Setting(containerEl)
-			.setName('Automatic trigger')
-			.setDesc('Anywhere: convert pinyin typed right after Chinese. Brackets only: convert only pinyin you put in brackets, such as 學習 [xuexi] or 學習 (xuexi), so ordinary text is never considered.')
-			.addDropdown((dropdown) =>
-				dropdown
-					.addOption('anywhere', 'After Chinese or in brackets')
-					.addOption('brackets', 'Only in brackets')
-					.setValue(settings.autoTrigger)
-					.onChange((value) => this.plugin.updateSettings({ autoTrigger: value === 'brackets' ? 'brackets' : 'anywhere' })),
-			);
-
-		new Setting(containerEl)
-			.setName('Remove brackets after converting')
-			.setDesc('Turn 學習 [xuexi] into 學習 xué xí instead of 學習 [xué xí]. Applies to ( ), [ ] and 【 】.')
-			.addToggle((toggle) => toggle.setValue(settings.removeBrackets).onChange((value) => this.plugin.updateSettings({ removeBrackets: value })));
-
-		new Setting(containerEl)
-			.setName('Idle delay')
-			.setDesc(`Milliseconds to wait after typing before automatic mode checks (${MIN_IDLE_DELAY_MS}–${MAX_IDLE_DELAY_MS}).`)
-			.addSlider((slider) =>
-				slider
-					.setLimits(MIN_IDLE_DELAY_MS, MAX_IDLE_DELAY_MS, DELAY_STEP_MS)
-					.setValue(settings.idleDelayMs)
-					.setDynamicTooltip()
-					.onChange((value) => this.plugin.updateSettings({ idleDelayMs: value })),
-			);
-
-		new Setting(containerEl)
-			.setName('Typo suggestions')
-			.setDesc('In automatic mode, offer a correction (never applied without a click) for small spelling mistakes and for readings that differ from the phrase’s usual reading.')
-			.addToggle((toggle) => toggle.setValue(settings.typoSuggestions).onChange((value) => this.plugin.updateSettings({ typoSuggestions: value })));
-
-		new Setting(containerEl)
-			.setName('Output separator')
-			.setDesc('How new pinyin is placed after the Chinese. Existing parentheses are always kept.')
-			.addDropdown((dropdown) =>
-				dropdown
-					.addOption('space', 'Space: 學習 xué xí')
-					.addOption('parentheses', 'Parentheses: 學習 (xué xí)')
-					.setValue(settings.separator)
-					.onChange((value) => this.plugin.updateSettings({ separator: value === 'parentheses' ? 'parentheses' : 'space' })),
-			);
-
-		new Setting(containerEl)
-			.setName('Mark tone changes of 一 and 不')
-			.setDesc('Off: dictionary style (一個 yī gè, 不是 bù shì). On: spoken tone changes as provided by the pronunciation library (yí gè, bú shì). Third-tone changes are never marked.')
-			.addToggle((toggle) => toggle.setValue(settings.markYiBuSandhi).onChange((value) => this.plugin.updateSettings({ markYiBuSandhi: value })));
+			.setName('Only convert inside brackets')
+			.setDesc('Off: pinyin typed right after Chinese is converted as soon as it is complete, and pinyin in brackets such as 學習 [xuexi] works too. On: only pinyin inside ( ), [ ], 【 】 or （ ） is converted, so ordinary text is never touched.')
+			.addToggle((toggle) => toggle.setValue(settings.bracketsOnly).onChange((value) => this.plugin.updateSettings({ bracketsOnly: value })));
 
 		this.displayOverrides(containerEl);
 	}

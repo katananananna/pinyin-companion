@@ -12,7 +12,7 @@ An Obsidian plugin for people who write Chinese speeches and study notes. Type a
 ```
 
 - Works with Traditional and Simplified Chinese; your characters are never changed.
-- Output is lowercase, space-separated, tone-marked pinyin. No bold, italics or parentheses unless you choose parentheses in settings.
+- Output is lowercase, space-separated, tone-marked pinyin. No bold, italics or parentheses.
 - Fully offline: the pronunciation data is bundled. No network requests, AI, API keys or telemetry.
 
 ## Install manually
@@ -61,29 +61,29 @@ If the text after the Chinese doesn't resemble the pinyin closely enough (for ex
 
 ## Automatic mode
 
-Off by default. Turn it on in **Settings → Pinyin Companion → Automatic mode**. Once it is on, you don't need the command palette: just type.
+Always on, so you don't need the command palette: just type.
 
 Two ways to type, both of which work at the same time:
 
-- **Plain:** type the Chinese, a space, then the pinyin, and pause: `學習 xuexi` → `學習 xué xí`.
-- **In brackets:** type the pinyin inside `( )`, `[ ]`, `【 】` or `（ ）`: `學習 [xuexi]` → `學習 [xué xí]`. Turn on **Remove brackets after converting** to get `學習 xué xí` instead. Set **Automatic trigger** to **Only in brackets** if you want plain text after Chinese to be left alone completely.
+- **Plain:** type the Chinese, a space, then the pinyin: `學習 xuexi` → `學習 xué xí` the moment the pinyin is complete.
+- **In brackets:** type the pinyin inside `( )`, `[ ]`, `【 】` or `（ ）`: `學習 [xuexi]` → `學習 xué xí` (the brackets are removed). Turn on **Only convert inside brackets** in settings if you want plain text after Chinese to be left alone completely.
 
 **How it tells pinyin from ordinary notes.** Text after Chinese (plain or in brackets) is only converted when it spells the pronunciation of the Chinese right before it. `學習 [xuexi]` converts, but `學習 [study]`, `我喜歡 (coffee)`, `回饋 [TODO]` and `學習 [see page 3]` don't match, so they're left alone. Square brackets that are part of Markdown (`[學習 xuexi](https://…)`, `[xuexi][ref]`, `[^xuexi]`, `[[學習 xuexi]]`) are never treated as pinyin. The plugin never guesses from the English side alone.
 
 Tip: Obsidian types the closing bracket for you (Settings → Editor → Auto pair brackets), so you type `學習 [xuexi` and the closing `]` is already there. Without auto-pairing, close the bracket yourself, because an unclosed bracket isn't converted.
 
-When on, after you stop typing for the idle delay (700 ms by default), the plugin looks at the line you are typing on:
+As you type, the plugin looks at the line you are typing on. A complete, exact match converts immediately; less certain cases (such as only the last characters of a longer run) wait for a 0.7 second pause:
 
 - It only considers an annotation that **ends at your cursor** (a space or punctuation mark typed after it is fine).
 - It replaces the pinyin **only if every typed syllable exactly matches** the reading of the Chinese just before it (after normalizing tone numbers, ü spellings and letter case), and only one interpretation fits.
 - It waits while the annotation may be incomplete. For example, `謝謝 xie` is left alone because you are probably about to type `xie xie`.
 - It never touches pinyin you already typed with tone marks.
-- Spelling mistakes and readings that differ from the phrase's reading are **never replaced silently**. With **Typo suggestions** on, a notice offers one button per correction; nothing changes unless you select one.
+- Spelling mistakes and readings that differ from the phrase's reading are **never replaced silently**. A notice offers one button per correction; nothing changes unless you select one.
 - It never runs during Chinese IME composition, only for a single cursor, and never in fenced code blocks, frontmatter, inline code, URLs, link destinations, wiki links or HTML.
 - Each conversion is a separate undo step. If you undo a conversion, it is not reapplied to that annotation.
 - Pasted text, undo/redo and edits made by other plugins never trigger it.
 
-If automatic mode ever gets in the way, turn it off and use **Correct pinyin annotation at cursor**, which gives you the same results on demand.
+If automatic conversion ever gets in the way, switch on **Only convert inside brackets**, or use **Correct pinyin annotation at cursor**, which gives you the same results on demand.
 
 ## How matching works
 
@@ -133,14 +133,10 @@ In **Settings → Pinyin Companion → Pronunciation overrides**, add an exact p
 
 | Setting | Default | Description |
 |---|---|---|
-| Automatic mode | Off | See [Automatic mode](#automatic-mode). |
-| Idle delay | 700 ms | 300–5000 ms. |
-| Automatic trigger | After Chinese or in brackets | Or **Only in brackets**. |
-| Remove brackets after converting | Off | `學習 [xuexi]` → `學習 xué xí` instead of keeping the brackets. |
-| Typo suggestions | On | Automatic mode offers (never applies) corrections for spelling mistakes and unusual readings. The correction command always offers them. |
-| Output separator | Space | `學習 xué xí` or `學習 (xué xí)`. Existing parentheses are always kept. |
-| Mark tone changes of 一 and 不 | Off | See [Pronunciation, tones and limitations](#pronunciation-tones-and-limitations). |
+| Only convert inside brackets | Off | Off: pinyin after Chinese converts as soon as it is complete, in brackets or not. On: only pinyin inside brackets converts. |
 | Pronunciation overrides | none | Add/remove exact phrase readings. |
+
+Everything else is fixed: output is space-separated, brackets are removed after converting, spoken tone changes of 一 and 不 are marked, and spelling-mistake suggestions are always offered.
 
 ## Other limitations
 
@@ -182,7 +178,7 @@ src/
     decide.ts             command/automatic/selection policies
     typo.ts               bounded transposition-aware edit distance
     markdown-protect.ts   code/frontmatter/URL/link/HTML detection
-  editor/auto-extension.ts  CodeMirror 6 automatic mode (idle timer, IME, undo)
+  editor/auto-extension.ts  CodeMirror 6 automatic mode (instant check, short pause, IME, undo)
   ui/                     chooser modal and suggestion notice
 tests/                    vitest suites (jsdom for the CodeMirror tests)
 ```

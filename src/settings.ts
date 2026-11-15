@@ -3,29 +3,18 @@ import type { Separator } from './core/decide';
 import { Pronouncer } from './core/pronouncer';
 
 export interface PinyinCompanionSettings {
-	autoMode: boolean;
-	idleDelayMs: number;
-	typoSuggestions: boolean;
-	/** 'anywhere': pinyin right after Chinese; 'brackets': only pinyin typed in brackets. */
-	autoTrigger: 'anywhere' | 'brackets';
-	/** Remove the typed brackets when converting, e.g. 學習 [xuexi] -> 學習 xué xí. */
-	removeBrackets: boolean;
-	separator: Separator;
-	markYiBuSandhi: boolean;
+	/** Only convert pinyin typed inside brackets, never plain text after Chinese. */
+	bracketsOnly: boolean;
 	overrides: OverrideEntry[];
 }
 
-export const MIN_IDLE_DELAY_MS = 300;
-export const MAX_IDLE_DELAY_MS = 5000;
+/** Fixed behaviour that used to be settings. */
+export const OUTPUT_SEPARATOR: Separator = 'space';
+export const REMOVE_BRACKETS = true;
+export const MARK_YI_BU_SANDHI = true;
 
 export const DEFAULT_SETTINGS: Readonly<PinyinCompanionSettings> = Object.freeze({
-	autoMode: false,
-	idleDelayMs: 700,
-	typoSuggestions: true,
-	autoTrigger: 'anywhere',
-	removeBrackets: false,
-	separator: 'space',
-	markYiBuSandhi: false,
+	bracketsOnly: false,
 	overrides: [],
 });
 
@@ -44,27 +33,18 @@ function sanitizeOverrides(value: unknown): OverrideEntry[] {
 	return [...byPhrase.values()];
 }
 
-/** Validate settings loaded from disk; unknown or invalid values fall back to defaults. */
+/** Validate settings loaded from disk; unknown or invalid values fall back to defaults. Older versions' fields are ignored, except the trigger. */
 export function sanitizeSettings(raw: unknown): PinyinCompanionSettings {
 	const data = isRecord(raw) ? raw : {};
-	const delay = typeof data.idleDelayMs === 'number' && Number.isFinite(data.idleDelayMs)
-		? Math.round(Math.min(MAX_IDLE_DELAY_MS, Math.max(MIN_IDLE_DELAY_MS, data.idleDelayMs)))
-		: DEFAULT_SETTINGS.idleDelayMs;
 	return {
-		autoMode: typeof data.autoMode === 'boolean' ? data.autoMode : DEFAULT_SETTINGS.autoMode,
-		idleDelayMs: delay,
-		typoSuggestions: typeof data.typoSuggestions === 'boolean' ? data.typoSuggestions : DEFAULT_SETTINGS.typoSuggestions,
-		autoTrigger: data.autoTrigger === 'brackets' ? 'brackets' : 'anywhere',
-		removeBrackets: typeof data.removeBrackets === 'boolean' ? data.removeBrackets : DEFAULT_SETTINGS.removeBrackets,
-		separator: data.separator === 'parentheses' ? 'parentheses' : 'space',
-		markYiBuSandhi: typeof data.markYiBuSandhi === 'boolean' ? data.markYiBuSandhi : DEFAULT_SETTINGS.markYiBuSandhi,
+		bracketsOnly: data.bracketsOnly === true || data.autoTrigger === 'brackets',
 		overrides: sanitizeOverrides(data.overrides),
 	};
 }
 
 export function createPronouncer(settings: PinyinCompanionSettings): Pronouncer {
 	return new Pronouncer({
-		markYiBuSandhi: settings.markYiBuSandhi,
+		markYiBuSandhi: MARK_YI_BU_SANDHI,
 		overrides: buildOverrideMap(settings.overrides),
 	});
 }

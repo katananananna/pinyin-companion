@@ -10,7 +10,7 @@ Record the Obsidian version, OS and device for each run.
 
 - [ ] The plugin appears under **Settings → Community plugins** and turns on without errors (check **View → Toggle developer tools → Console** on desktop).
 - [ ] Both commands appear in the command palette when you search "pinyin".
-- [ ] The **Pinyin Companion** settings tab opens and shows all six settings.
+- [ ] The **Pinyin Companion** settings tab opens and shows the brackets-only toggle and the overrides.
 - [ ] Turn the plugin off and on again. No errors, the commands still work once, and no duplicate notices or conversions appear.
 - [ ] Assign a hotkey to each command under **Settings → Hotkeys**. Both hotkeys trigger the commands.
 
@@ -43,13 +43,13 @@ Record the Obsidian version, OS and device for each run.
 
 ## 4. Automatic mode (desktop)
 
-Turn on **Automatic mode** (idle delay 700 ms, typo suggestions on).
+Automatic conversion is always on.
 
 - [ ] Type `學習 xuexi` and pause. After about 0.7 s the text becomes `學習 xué xí` and the cursor stays at the end of the line.
 - [ ] Keep typing without pausing (`學習 xuexi很好`). No conversion happens mid-stream.
 - [ ] Type `學習 [xuexi` (Obsidian adds the `]`), pause → `學習 [xué xí]`. With **Remove brackets after converting** on → `學習 xué xí`.
 - [ ] Type `學習 (study)` and `我喜歡 [coffee]`, pause → unchanged. Type `[學習 xuexi](https://example.com)` → unchanged.
-- [ ] Set **Automatic trigger** to **Only in brackets**: `學習 xuexi` stays, `學習 [xuexi]` converts.
+- [ ] Turn on **Only convert inside brackets**: `學習 xuexi` stays, `學習 [xuexi]` converts.
 - [ ] Type `謝謝 xie`, pause → no change. Continue to `謝謝 xie xie`, pause → `謝謝 xiè xiè` (the library's reading).
 - [ ] Type `尚未成熟 shang wei`, pause → no change. Finish it, pause → converted.
 - [ ] After an automatic conversion, press Undo once. The plain pinyin returns and **is not converted again**, even after typing a space and pausing.
@@ -65,7 +65,6 @@ Turn on **Automatic mode** (idle delay 700 ms, typo suggestions on).
   - [ ] a URL, e.g. `https://example.com/學習xuexi`
   - [ ] an HTML tag `<span title="學習 xuexi">`
 - [ ] With two cursors, typing never triggers a conversion.
-- [ ] Change the idle delay to 2000 ms. The conversion waits about 2 s.
 - [ ] Turn automatic mode off. Typing never converts.
 - [ ] Open a note in a **pop-out window** and repeat the first check.
 
@@ -73,7 +72,7 @@ Turn on **Automatic mode** (idle delay 700 ms, typo suggestions on).
 
 Test with at least one system IME (e.g. macOS Pinyin/Zhuyin, Windows Microsoft Pinyin/Bopomofo, Gboard on Android).
 
-- [ ] Type Chinese with the IME candidate window open, pausing longer than the idle delay while composing. Nothing is rewritten and the composition is not interrupted.
+- [ ] Type Chinese with the IME candidate window open, pausing for a few seconds while composing. Nothing is rewritten and the composition is not interrupted.
 - [ ] Type `學習` with the IME, switch to English, type ` xuexi`, pause → converted once, and the IME is not disrupted.
 - [ ] Type pinyin through the IME's inline English mode (if it has one) → same behaviour.
 
@@ -86,7 +85,7 @@ The code uses no desktop-only APIs, but this plugin has not yet been run on a de
 - [ ] The chooser opens and responds to taps.
 - [ ] In automatic mode, typing with the on-screen keyboard (including predictive text and the Chinese keyboard) converts only after a pause, never during composition, and Undo works.
 - [ ] Suggestion notice buttons can be tapped.
-- [ ] The settings tab is usable: the slider, the dropdown, and adding/removing overrides.
+- [ ] The settings tab is usable: the toggle and adding/removing overrides.
 
 ## 7. Settings and overrides
 
