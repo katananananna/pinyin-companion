@@ -7,6 +7,7 @@ export interface CommandContext {
 	app: App;
 	pronouncer: Pronouncer;
 	separator: Separator;
+	removeBrackets: boolean;
 }
 
 function reportFailure(action: string, error: unknown): void {
@@ -62,7 +63,7 @@ export function correctPinyinAtCursor(editor: Editor, ctx: CommandContext): void
 		}
 		const cursor = editor.getCursor('head');
 		const line = editor.getLine(cursor.line);
-		const outcome = correctAtCursor(line, cursor.ch, ctx.pronouncer, ctx.separator);
+		const outcome = correctAtCursor(line, cursor.ch, ctx.pronouncer, ctx.separator, ctx.removeBrackets);
 		switch (outcome.type) {
 			case 'none':
 			case 'unchanged':

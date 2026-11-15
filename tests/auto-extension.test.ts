@@ -26,7 +26,7 @@ function setup(doc: string, cursor = doc.length): Harness {
 	const host: AutoHost = {
 		isEnabled: () => enabled,
 		idleDelayMs: () => DELAY,
-		decide: (line, pos) => decideAutomatic(line, pos, pronouncer, { separator: 'space', suggestions: true }),
+		decide: (line, pos) => decideAutomatic(line, pos, pronouncer, { separator: 'space', suggestions: true, bracketsOnly: false, removeBrackets: false }),
 		suggest: (_view, suggestion) => suggestions.push(suggestion),
 	};
 	const view = new EditorView({

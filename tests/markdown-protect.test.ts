@@ -84,6 +84,11 @@ describe('settings sanitising', () => {
 		expect(sanitizeSettings({ idleDelayMs: 99999 }).idleDelayMs).toBe(5000);
 	});
 
+	test('trigger settings are validated', () => {
+		expect(sanitizeSettings({ autoTrigger: 'brackets', removeBrackets: true })).toMatchObject({ autoTrigger: 'brackets', removeBrackets: true });
+		expect(sanitizeSettings({ autoTrigger: 'weird', removeBrackets: 'yes' })).toMatchObject({ autoTrigger: 'anywhere', removeBrackets: false });
+	});
+
 	test('does not mutate the defaults', () => {
 		const result = sanitizeSettings({});
 		result.overrides.push({ phrase: '學', pinyin: 'xué' });

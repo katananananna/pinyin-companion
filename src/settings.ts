@@ -6,6 +6,10 @@ export interface PinyinCompanionSettings {
 	autoMode: boolean;
 	idleDelayMs: number;
 	typoSuggestions: boolean;
+	/** 'anywhere': pinyin right after Chinese; 'brackets': only pinyin typed in brackets. */
+	autoTrigger: 'anywhere' | 'brackets';
+	/** Remove the typed brackets when converting, e.g. 學習 [xuexi] -> 學習 xué xí. */
+	removeBrackets: boolean;
 	separator: Separator;
 	markYiBuSandhi: boolean;
 	overrides: OverrideEntry[];
@@ -18,6 +22,8 @@ export const DEFAULT_SETTINGS: Readonly<PinyinCompanionSettings> = Object.freeze
 	autoMode: false,
 	idleDelayMs: 700,
 	typoSuggestions: true,
+	autoTrigger: 'anywhere',
+	removeBrackets: false,
 	separator: 'space',
 	markYiBuSandhi: false,
 	overrides: [],
@@ -48,6 +54,8 @@ export function sanitizeSettings(raw: unknown): PinyinCompanionSettings {
 		autoMode: typeof data.autoMode === 'boolean' ? data.autoMode : DEFAULT_SETTINGS.autoMode,
 		idleDelayMs: delay,
 		typoSuggestions: typeof data.typoSuggestions === 'boolean' ? data.typoSuggestions : DEFAULT_SETTINGS.typoSuggestions,
+		autoTrigger: data.autoTrigger === 'brackets' ? 'brackets' : 'anywhere',
+		removeBrackets: typeof data.removeBrackets === 'boolean' ? data.removeBrackets : DEFAULT_SETTINGS.removeBrackets,
 		separator: data.separator === 'parentheses' ? 'parentheses' : 'space',
 		markYiBuSandhi: typeof data.markYiBuSandhi === 'boolean' ? data.markYiBuSandhi : DEFAULT_SETTINGS.markYiBuSandhi,
 		overrides: sanitizeOverrides(data.overrides),

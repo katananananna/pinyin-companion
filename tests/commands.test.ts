@@ -49,6 +49,7 @@ const ctx: CommandContext = {
 	app: {} as App,
 	pronouncer: new Pronouncer({ markYiBuSandhi: false, overrides: new Map() }),
 	separator: 'space',
+	removeBrackets: false,
 };
 const asEditor = (e: FakeEditor): Editor => e as unknown as Editor;
 

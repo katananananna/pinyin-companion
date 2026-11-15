@@ -34,6 +34,8 @@ export default class PinyinCompanionPlugin extends Plugin {
 					decideAutomatic(line, cursor, this.getPronouncer(), {
 						separator: this.settings.separator,
 						suggestions: this.settings.typoSuggestions,
+						bracketsOnly: this.settings.autoTrigger === 'brackets',
+						removeBrackets: this.settings.removeBrackets,
 					}),
 				suggest: (view, suggestion) => this.notices.show(view, suggestion),
 			}),
@@ -59,6 +61,11 @@ export default class PinyinCompanionPlugin extends Plugin {
 	}
 
 	private commandContext(): CommandContext {
-		return { app: this.app, pronouncer: this.getPronouncer(), separator: this.settings.separator };
+		return {
+			app: this.app,
+			pronouncer: this.getPronouncer(),
+			separator: this.settings.separator,
+			removeBrackets: this.settings.removeBrackets,
+		};
 	}
 }

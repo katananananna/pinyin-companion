@@ -22,10 +22,17 @@ function corrected(input: string, separator: 'space' | 'parentheses' = 'space'):
 	return applyProposal(line, outcome.proposal);
 }
 
-function auto(input: string, suggestions = true) {
+function auto(input: string, suggestions = true, extra: { bracketsOnly?: boolean; removeBrackets?: boolean } = {}) {
 	const cursor = input.includes('|') ? input.indexOf('|') : input.length;
 	const line = input.replace('|', '');
-	return { line, outcome: decideAutomatic(line, cursor, pronouncer, { separator: 'space', suggestions }) };
+	const options = { separator: 'space' as const, suggestions, bracketsOnly: false, removeBrackets: false, ...extra };
+	return { line, outcome: decideAutomatic(line, cursor, pronouncer, options) };
+}
+
+/** Result of automatic mode applied to the line, or the line itself when nothing happens. */
+function autoResult(input: string, extra: { bracketsOnly?: boolean; removeBrackets?: boolean } = {}): string {
+	const { line, outcome } = auto(input, true, extra);
+	return outcome.type === 'apply' ? applyProposal(line, outcome.proposal) : line;
 }
 
 describe('correct pinyin annotation at cursor', () => {
@@ -242,5 +249,48 @@ describe('region scanning', () => {
 
 	test('an unclosed parenthesis is not an annotation', () => {
 		expect(findRegions('學習 (xuexi')).toEqual([]);
+	});
+});
+
+describe('bracket triggers', () => {
+	test('square, full-width and round brackets are all recognised, brackets kept by default', () => {
+		expect(autoResult('學習 [xuexi|]')).toBe('學習 [xué xí]');
+		expect(autoResult('學習[xuexi|]')).toBe('學習[xué xí]');
+		expect(autoResult('學習 【xuexi|】')).toBe('學習 【xué xí】');
+		expect(autoResult('學習 (xuexi|)')).toBe('學習 (xué xí)');
+		expect(autoResult('學習（xuexi|）')).toBe('學習（xué xí）');
+	});
+
+	test('removeBrackets drops the typed brackets and the cursor can sit after them', () => {
+		const opts = { removeBrackets: true };
+		expect(autoResult('學習 [xuexi|]', opts)).toBe('學習 xué xí');
+		expect(autoResult('學習 [xuexi]|', opts)).toBe('學習 xué xí');
+		expect(autoResult('學習 【xuexi|】', opts)).toBe('學習 xué xí');
+		expect(autoResult('我今天學習 (xuexi|) 很好', opts)).toBe('我今天學習 xué xí 很好');
+		expect(corrected('學習 [xuexi]')).toBe('學習 [xué xí]');
+	});
+
+	test('brackets-only mode ignores unbracketed pinyin but still converts bracketed pinyin', () => {
+		expect(autoResult('學習 xuexi', { bracketsOnly: true })).toBe('學習 xuexi');
+		expect(autoResult('學習 [xuexi|]', { bracketsOnly: true, removeBrackets: true })).toBe('學習 xué xí');
+	});
+
+	test('ordinary notes in brackets are left alone', () => {
+		for (const text of ['我喜歡 [coffee|]', '學習 (study|)', '回饋 [feedback|]', '學習 [see page 3|]', '學習 [TODO|]', '學習 (xue xi xx|)']) {
+			expect(auto(text).outcome.type).toBe('none');
+		}
+		expect(correct('我喜歡 [coffee]').outcome.type).toBe('none');
+	});
+
+	test('Markdown links, references, footnotes and wiki links are not pinyin', () => {
+		for (const text of ['學習 [xuexi|](https://example.com)', '學習 [xuexi|][ref]', '學習 [xuexi|]: https://example.com', '學習[^xuexi|]', '[[學習 xuexi|]]']) {
+			expect(auto(text).outcome.type).toBe('none');
+		}
+		expect(correct('[學習 xuexi](https://example.com)').outcome.type).toBe('none');
+	});
+
+	test('a typo inside brackets is a suggestion, and removal applies to the suggestion too', () => {
+		const { outcome } = auto('學習 [xueix|]', true, { removeBrackets: true });
+		expect(outcome).toMatchObject({ type: 'suggest', proposals: [{ insert: 'xué xí', original: '[xueix]' }] });
 	});
 });

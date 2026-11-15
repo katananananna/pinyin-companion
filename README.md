@@ -61,7 +61,16 @@ If the text after the Chinese doesn't resemble the pinyin closely enough (for ex
 
 ## Automatic mode
 
-Off by default. Turn it on in **Settings → Pinyin Companion → Automatic mode**.
+Off by default. Turn it on in **Settings → Pinyin Companion → Automatic mode**. Once it is on, you don't need the command palette: just type.
+
+Two ways to type, both of which work at the same time:
+
+- **Plain:** type the Chinese, a space, then the pinyin, and pause: `學習 xuexi` → `學習 xué xí`.
+- **In brackets:** type the pinyin inside `( )`, `[ ]`, `【 】` or `（ ）`: `學習 [xuexi]` → `學習 [xué xí]`. Turn on **Remove brackets after converting** to get `學習 xué xí` instead. Set **Automatic trigger** to **Only in brackets** if you want plain text after Chinese to be left alone completely.
+
+**How it tells pinyin from ordinary notes.** Text after Chinese (plain or in brackets) is only converted when it spells the pronunciation of the Chinese right before it. `學習 [xuexi]` converts, but `學習 [study]`, `我喜歡 (coffee)`, `回饋 [TODO]` and `學習 [see page 3]` don't match, so they're left alone. Square brackets that are part of Markdown (`[學習 xuexi](https://…)`, `[xuexi][ref]`, `[^xuexi]`, `[[學習 xuexi]]`) are never treated as pinyin. The plugin never guesses from the English side alone.
+
+Tip: Obsidian types the closing bracket for you (Settings → Editor → Auto pair brackets), so you type `學習 [xuexi` and the closing `]` is already there. Without auto-pairing, close the bracket yourself, because an unclosed bracket isn't converted.
 
 When on, after you stop typing for the idle delay (700 ms by default), the plugin looks at the line you are typing on:
 
@@ -80,7 +89,7 @@ If automatic mode ever gets in the way, turn it off and use **Correct pinyin ann
 
 A Chinese run can be a whole sentence, so the plugin has to decide which Chinese the pinyin belongs to. The rules, which are implemented in `src/core/annotation.ts`, are:
 
-1. **Region.** A run of Chinese characters, then optionally up to three closing emphasis markers (`**回饋** hui kui`), optional spaces, an optional opening parenthesis `(` or `（`, then pinyin-like words separated by spaces. If a parenthesis is opened, it must be closed.
+1. **Region.** A run of Chinese characters, then optionally up to three closing emphasis markers (`**回饋** hui kui`), optional spaces, an optional opening bracket (`(`, `（`, `[`, `【` or `［`), then pinyin-like words separated by spaces. If a bracket is opened, its matching closer must follow. A square-bracket span followed by `(`, `[` or `:` is a Markdown link or reference and is ignored.
 2. **Suffix candidates.** Only Chinese that ends right where the pinyin begins is considered: the last 1 to 16 characters of the run.
 3. **Context.** Readings are computed for the last 32 characters of the run together, so the library's word segmentation can pick readings for polyphonic characters (`我在銀行` → `háng`). The suffix on its own is also tried.
 4. **Syllable alignment.** Typed pinyin must cover whole syllables. A joined word like `xuexi` may cover several syllables, but a syllable never spans two typed words. Only the leading pinyin words are replaced, so English after the pinyin (`學習 xuexi is fun`) is kept.
@@ -126,6 +135,8 @@ In **Settings → Pinyin Companion → Pronunciation overrides**, add an exact p
 |---|---|---|
 | Automatic mode | Off | See [Automatic mode](#automatic-mode). |
 | Idle delay | 700 ms | 300–5000 ms. |
+| Automatic trigger | After Chinese or in brackets | Or **Only in brackets**. |
+| Remove brackets after converting | Off | `學習 [xuexi]` → `學習 xué xí` instead of keeping the brackets. |
 | Typo suggestions | On | Automatic mode offers (never applies) corrections for spelling mistakes and unusual readings. The correction command always offers them. |
 | Output separator | Space | `學習 xué xí` or `學習 (xué xí)`. Existing parentheses are always kept. |
 | Mark tone changes of 一 and 不 | Off | See [Pronunciation, tones and limitations](#pronunciation-tones-and-limitations). |

@@ -21,6 +21,22 @@ export class PinyinCompanionSettingTab extends PluginSettingTab {
 			.addToggle((toggle) => toggle.setValue(settings.autoMode).onChange((value) => this.plugin.updateSettings({ autoMode: value })));
 
 		new Setting(containerEl)
+			.setName('Automatic trigger')
+			.setDesc('Anywhere: convert pinyin typed right after Chinese. Brackets only: convert only pinyin you put in brackets, such as 學習 [xuexi] or 學習 (xuexi), so ordinary text is never considered.')
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOption('anywhere', 'After Chinese or in brackets')
+					.addOption('brackets', 'Only in brackets')
+					.setValue(settings.autoTrigger)
+					.onChange((value) => this.plugin.updateSettings({ autoTrigger: value === 'brackets' ? 'brackets' : 'anywhere' })),
+			);
+
+		new Setting(containerEl)
+			.setName('Remove brackets after converting')
+			.setDesc('Turn 學習 [xuexi] into 學習 xué xí instead of 學習 [xué xí]. Applies to ( ), [ ] and 【 】.')
+			.addToggle((toggle) => toggle.setValue(settings.removeBrackets).onChange((value) => this.plugin.updateSettings({ removeBrackets: value })));
+
+		new Setting(containerEl)
 			.setName('Idle delay')
 			.setDesc(`Milliseconds to wait after typing before automatic mode checks (${MIN_IDLE_DELAY_MS}–${MAX_IDLE_DELAY_MS}).`)
 			.addSlider((slider) =>

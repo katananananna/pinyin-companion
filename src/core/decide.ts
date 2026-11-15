@@ -59,6 +59,8 @@ interface ProposalContext {
 	line: string;
 	region: AnnotationRegion;
 	separator: Separator;
+	/** Replace the typed brackets together with the pinyin inside them. */
+	removeBrackets: boolean;
 	/** Inline code, URLs, link destinations, wiki links and HTML on this line. */
 	protectedRanges: readonly Range[];
 }
@@ -70,15 +72,18 @@ function toProposal(ctx: ProposalContext, candidate: Candidate): Proposal | null
 	const last = region.tokens[candidate.tokenCount - 1];
 	if (!first || !last) return null;
 	const inner = candidate.syllables.join(' ');
+	const strip = ctx.removeBrackets && region.open !== null && region.close !== null && candidate.tokenCount === region.tokens.length;
+	const spanFrom = strip ? (region.open?.from ?? first.from) : first.from;
+	const spanTo = strip ? (region.close?.to ?? last.to) : last.to;
 	const wrap = region.wrapper === 'none' && separator === 'parentheses';
 	const chineseCps = region.han.slice(-candidate.suffixLength);
 	const chineseFrom = chineseCps[0]?.from ?? first.from;
 	if (overlapsAny(ctx.protectedRanges, chineseFrom, region.end)) return null;
 	return {
-		from: first.from,
-		to: last.to,
-		insert: wrap ? `(${inner})` : inner,
-		original: line.slice(first.from, last.to),
+		from: spanFrom,
+		to: spanTo,
+		insert: wrap && !strip ? `(${inner})` : inner,
+		original: line.slice(spanFrom, spanTo),
 		chinese: chineseCps.map((cp) => cp.ch).join(''),
 		chineseFrom,
 		kind: candidate.kind,
@@ -136,16 +141,22 @@ function minTokensForCursor(region: AnnotationRegion, cursor: number): number {
 }
 
 /** "Correct pinyin annotation at cursor". */
-export function correctAtCursor(line: string, cursor: number, pronouncer: Pronouncer, separator: Separator): CorrectionOutcome {
+export function correctAtCursor(
+	line: string,
+	cursor: number,
+	pronouncer: Pronouncer,
+	separator: Separator,
+	removeBrackets = false,
+): CorrectionOutcome {
 	const region = regionAtCursor(line, cursor);
 	if (!region) return { type: 'none', message: 'No Chinese text followed by pinyin was found at the cursor.' };
 	if (region.tokens.every((t) => t.chunks === null)) {
 		return { type: 'none', message: 'The text after the Chinese does not look like pinyin.' };
 	}
-	const all = region.wrapper === 'paren';
+	const all = region.wrapper !== 'none';
 	const minTokens = all ? region.tokens.length : minTokensForCursor(region, cursor);
 	const { candidates } = evaluateRegion(region, pronouncer, { minTokens, maxTokens: region.tokens.length, allowTypos: true });
-	const ctx: ProposalContext = { line, region, separator, protectedRanges: inlineProtectedRanges(line) };
+	const ctx: ProposalContext = { line, region, separator, removeBrackets, protectedRanges: inlineProtectedRanges(line) };
 	const toProposals = (list: readonly Candidate[]): Proposal[] => distinctProposals(list.map((c) => toProposal(ctx, c)));
 
 	const exact = candidates.filter((c) => c.kind === 'exact');
@@ -203,6 +214,9 @@ function mayBeIncomplete(contextKeys: readonly (string | null)[], suffixLength: 
 export interface AutoOptions {
 	separator: Separator;
 	suggestions: boolean;
+	/** Only act on pinyin typed inside brackets, e.g. 學習 [xuexi]. */
+	bracketsOnly: boolean;
+	removeBrackets: boolean;
 }
 
 /**
@@ -219,13 +233,20 @@ export function decideAutomatic(line: string, cursor: number, pronouncer: Pronou
 		return cursor >= r.end && AUTO_TRAILING.test(line.slice(r.end, cursor));
 	});
 	if (!region || region.tokens.some((t) => t.hasToneMarks || t.chunks === null)) return { type: 'none' };
+	if (options.bracketsOnly && region.wrapper === 'none') return { type: 'none' };
 	const count = region.tokens.length;
 	const { candidates, contextKeys } = evaluateRegion(region, pronouncer, {
 		minTokens: count,
 		maxTokens: count,
 		allowTypos: options.suggestions,
 	});
-	const ctx: ProposalContext = { line, region, separator: options.separator, protectedRanges: inlineProtectedRanges(line) };
+	const ctx: ProposalContext = {
+		line,
+		region,
+		separator: options.separator,
+		removeBrackets: options.removeBrackets,
+		protectedRanges: inlineProtectedRanges(line),
+	};
 	const exact = candidates.filter((c) => c.kind === 'exact');
 	if (exact.length > 0) {
 		const proposals = distinctProposals(exact.map((c) => toProposal(ctx, c)));

@@ -4,9 +4,10 @@
  *
  * Boundary rules (see README "How matching works"):
  * 1. A region is: a Chinese run, up to three closing emphasis markers
- *    (* _ ~ =), optional whitespace, an optional opening
- *    parenthesis, then one or more pinyin-like tokens separated by spaces
- *    (and, if a parenthesis was opened, its closing parenthesis).
+ *    (* _ ~ =), optional whitespace, an optional opening bracket ( ( [ 【 or
+ *    full-width forms), then one or more pinyin-like tokens separated by
+ *    spaces (and, if a bracket was opened, its matching closing bracket).
+ *    A square-bracket span followed by ( [ or : is a Markdown link and is ignored.
  * 2. The Chinese run may be a whole sentence. Only suffixes of the run (Chinese
  *    that ends right where the pinyin starts) are candidates, up to
  *    MAX_SUFFIX_LENGTH characters. Readings are taken in the context of the
@@ -53,7 +54,11 @@ export interface PinyinToken {
 
 export interface AnnotationRegion {
 	han: CodePoint[];
-	wrapper: 'none' | 'paren';
+	/** 'paren' = ( ) or （ ）; 'square' = [ ], 【 】 or ［ ］. */
+	wrapper: 'none' | 'paren' | 'square';
+	/** The opening and closing bracket characters (null when wrapper is 'none'). */
+	open: CodePoint | null;
+	close: CodePoint | null;
 	tokens: PinyinToken[];
 	/** Offset after the last token, or after the closing parenthesis. */
 	end: number;
@@ -85,10 +90,18 @@ export interface Evaluation {
 const TOKEN_START = /[A-Za-z\u00C0-\u024F\u1E00-\u1EFF]/u;
 // Letters (incl. precomposed tone vowels), digits, colon, apostrophes, or a combining mark (decomposed tones).
 const TOKEN_CHAR = /^(?:[A-Za-z0-9:'\u2019\u00C0-\u024F\u1E00-\u1EFF]|\p{Mn})$/u;
-const OPEN_PARENS = new Set(['(', '（']);
+const BRACKET_PAIRS: ReadonlyMap<string, string> = new Map([
+	['(', ')'],
+	['（', '）'],
+	['[', ']'],
+	['【', '】'],
+	['［', '］'],
+]);
+const SQUARE_OPENERS = new Set(['[', '【', '［']);
+/** A square-bracket span followed by one of these is a Markdown link, reference or definition, not pinyin. */
+const LINK_FOLLOWERS = new Set(['(', '[', ':']);
 const EMPHASIS_MARKERS = new Set(['*', '_', '~', '=']);
 const MAX_EMPHASIS_MARKERS = 3;
-const CLOSE_PARENS = new Set([')', '）']);
 
 export function parseToken(text: string, from: number): PinyinToken {
 	const token: PinyinToken = { text, from, to: from + text.length, chunks: null, hasToneMarks: false, hasDigits: false };
@@ -141,8 +154,11 @@ function parseTokensAfter(
 	// Closing emphasis markers may sit between the Chinese and the pinyin: **回饋** hui kui
 	while (j < cps.length && j - start < MAX_EMPHASIS_MARKERS && EMPHASIS_MARKERS.has(cps[j]?.ch ?? '')) j++;
 	while (j < cps.length && isWhitespaceChar(cps[j]?.ch ?? '')) j++;
-	const wrapper = OPEN_PARENS.has(cps[j]?.ch ?? '') ? 'paren' : 'none';
-	if (wrapper === 'paren') j++;
+	const opener = cps[j];
+	const closer = opener ? BRACKET_PAIRS.get(opener.ch) : undefined;
+	const wrapper = !opener || closer === undefined ? 'none' : SQUARE_OPENERS.has(opener.ch) ? 'square' : 'paren';
+	const open = wrapper === 'none' ? null : (opener ?? null);
+	if (open) j++;
 	const tokens: PinyinToken[] = [];
 	while (j < cps.length && TOKEN_START.test(cps[j]?.ch ?? '') && tokens.length < MAX_TOKENS) {
 		let k = j;
@@ -158,12 +174,13 @@ function parseTokensAfter(
 	}
 	const lastToken = tokens[tokens.length - 1];
 	if (!lastToken) return null;
-	if (wrapper === 'none') return { region: { wrapper, tokens, end: lastToken.to }, nextIndex: j };
+	if (wrapper === 'none') return { region: { wrapper, open: null, close: null, tokens, end: lastToken.to }, nextIndex: j };
 	let c = j;
 	while (c < cps.length && cps[c]?.ch === ' ') c++;
 	const close = cps[c];
-	if (!close || !CLOSE_PARENS.has(close.ch)) return null;
-	return { region: { wrapper, tokens, end: close.to }, nextIndex: c + 1 };
+	if (!close || close.ch !== closer) return null;
+	if (wrapper === 'square' && LINK_FOLLOWERS.has(cps[c + 1]?.ch ?? '')) return null;
+	return { region: { wrapper, open, close, tokens, end: close.to }, nextIndex: c + 1 };
 }
 
 interface Segment {

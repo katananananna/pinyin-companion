@@ -47,6 +47,9 @@ Turn on **Automatic mode** (idle delay 700 ms, typo suggestions on).
 
 - [ ] Type `學習 xuexi` and pause. After about 0.7 s the text becomes `學習 xué xí` and the cursor stays at the end of the line.
 - [ ] Keep typing without pausing (`學習 xuexi很好`). No conversion happens mid-stream.
+- [ ] Type `學習 [xuexi` (Obsidian adds the `]`), pause → `學習 [xué xí]`. With **Remove brackets after converting** on → `學習 xué xí`.
+- [ ] Type `學習 (study)` and `我喜歡 [coffee]`, pause → unchanged. Type `[學習 xuexi](https://example.com)` → unchanged.
+- [ ] Set **Automatic trigger** to **Only in brackets**: `學習 xuexi` stays, `學習 [xuexi]` converts.
 - [ ] Type `謝謝 xie`, pause → no change. Continue to `謝謝 xie xie`, pause → `謝謝 xiè xiè` (the library's reading).
 - [ ] Type `尚未成熟 shang wei`, pause → no change. Finish it, pause → converted.
 - [ ] After an automatic conversion, press Undo once. The plain pinyin returns and **is not converted again**, even after typing a space and pausing.
