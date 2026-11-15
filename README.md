@@ -72,14 +72,14 @@ Two ways to type, both of which work at the same time:
 
 Tip: Obsidian types the closing bracket for you (Settings → Editor → Auto pair brackets), so you type `學習 [xuexi` and the closing `]` is already there. Without auto-pairing, close the bracket yourself, because an unclosed bracket isn't converted.
 
-As you type, the plugin looks at the line you are typing on. A complete, exact match converts immediately; less certain cases (such as only the last characters of a longer run) wait for a 0.7 second pause:
+As you type, the plugin looks at the line you are typing on. A complete, exact match converts immediately; less certain cases (such as only the last characters of a longer run) wait for a 0.3 second pause:
 
 - Closing quotes and punctuation between the Chinese and the pinyin are fine: `「欲速則不達」yu su ze bu da` converts.
 - It only considers an annotation that **ends at your cursor** (a space or punctuation mark typed after it is fine).
 - It replaces the pinyin **only if every typed syllable exactly matches** the reading of the Chinese just before it (after normalizing tone numbers, ü spellings and letter case), and only one interpretation fits.
 - It waits while the annotation may be incomplete. For example, `謝謝 xie` is left alone because you are probably about to type `xie xie`.
 - Pinyin you typed with tone marks is left alone, except that a typed third tone before another third tone is turned into the spoken second tone (`俚語 lǐ yǔ` → `俚語 lí yǔ`).
-- **Spelling mistakes are fixed automatically** after a 0.7 second pause, when one correction clearly fits (`促進 cu jni` → `促進 cù jìn`, `學習 xueix` → `學習 xué xí`). Very short pinyin (four letters or fewer) is never corrected, and unfinished pinyin is left alone. If more than one correction fits, a notice lets you choose. Undo restores what you typed, and it won't be corrected again.
+- **Spelling mistakes are fixed automatically** after a 0.3 second pause, when one correction clearly fits (`促進 cu jni` → `促進 cù jìn`, `學習 xueix` → `學習 xué xí`). Very short pinyin (four letters or fewer) is never corrected, and unfinished pinyin is left alone. If more than one correction fits, a notice lets you choose. Undo restores what you typed, and it won't be corrected again.
 - It never runs during Chinese IME composition, only for a single cursor, and never in fenced code blocks, frontmatter, inline code, URLs, link destinations, wiki links or HTML.
 - Each conversion is a separate undo step. If you undo a conversion, it is not reapplied to that annotation.
 - Pasted text, undo/redo and edits made by other plugins never trigger it.

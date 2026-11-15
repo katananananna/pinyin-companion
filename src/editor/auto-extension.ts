@@ -31,7 +31,7 @@ export const PINYIN_USER_EVENT = 'input.pinyin';
 /** Exact, complete matches convert on the next tick. */
 export const INSTANT_DELAY_MS = 0;
 /** Less certain matches wait for this pause in typing. */
-export const SETTLE_DELAY_MS = 700;
+export const SETTLE_DELAY_MS = 300;
 const MAX_LINE_LENGTH = 4000;
 /** Input events that are not keystrokes. */
 const NON_TYPING_EVENTS = ['input.paste', 'input.drop', 'input.complete', 'input.pinyin'];
