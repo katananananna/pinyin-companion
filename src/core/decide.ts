@@ -232,7 +232,8 @@ export function decideAutomatic(line: string, cursor: number, pronouncer: Pronou
 		if (cursor >= lastTo && cursor <= r.end) return true;
 		return cursor >= r.end && AUTO_TRAILING.test(line.slice(r.end, cursor));
 	});
-	if (!region || region.tokens.some((t) => t.hasToneMarks || t.chunks === null)) return { type: 'none' };
+	if (!region || region.tokens.some((t) => t.chunks === null)) return { type: 'none' };
+	const typedWithTones = region.tokens.some((t) => t.hasToneMarks);
 	if (options.bracketsOnly && region.wrapper === 'none') return { type: 'none' };
 	const count = region.tokens.length;
 	const { candidates, contextKeys } = evaluateRegion(region, pronouncer, {
@@ -257,7 +258,8 @@ export function decideAutomatic(line: string, cursor: number, pronouncer: Pronou
 		if (mayBeIncomplete(contextKeys, candidate.suffixLength, candidate.typedKey)) return { type: 'none' };
 		return { type: 'apply', proposal: only };
 	}
-	if (!options.suggestions) return { type: 'none' };
+	// Pinyin typed with tone marks is only ever rewritten when it matches exactly (including spoken third-tone changes).
+	if (typedWithTones || !options.suggestions) return { type: 'none' };
 	const rest = candidates.filter((c) => c.kind !== 'exact' && !c.libraryKey.startsWith(c.typedKey));
 	if (rest.length === 0) return { type: 'none' };
 	const best = Math.min(...rest.map((c) => c.distance));

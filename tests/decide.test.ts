@@ -309,3 +309,19 @@ describe('closing punctuation between the Chinese and its pinyin', () => {
 		expect(run('欲速則不達」see page 3').type).toBe('none');
 	});
 });
+
+describe('spoken third-tone changes typed with tone marks', () => {
+	const p = new Pronouncer({ markYiBuSandhi: true, overrides: new Map() });
+	const run = (line: string) => decideAutomatic(line, line.length, p, { separator: 'space', suggestions: true, bracketsOnly: false, removeBrackets: true });
+
+	test.each([['這些俚語 lǐ yǔ', 'lí yǔ'], ['你好 nǐ hǎo', 'ní hǎo'], ['你好 ni3 hao3', 'ní hǎo']])('%s -> %s', (line, expected) => {
+		const outcome = run(line);
+		expect(outcome.type).toBe('apply');
+		if (outcome.type === 'apply') expect(outcome.proposal.insert).toBe(expected);
+	});
+
+	test('already spoken, or other tone differences, are not rewritten', () => {
+		expect(run('俚語 lí yǔ').type).toBe('none');
+		expect(run('你好 nī hǎo').type).toBe('none');
+	});
+});

@@ -1,6 +1,6 @@
 {
 	"name": "pinyin-companion",
-	"version": "0.3.2",
+	"version": "0.3.3",
 	"description": "Obsidian plugin: add tone-marked pinyin after Chinese text, using the Chinese as the source of truth.",
 	"main": "main.js",
 	"type": "module",

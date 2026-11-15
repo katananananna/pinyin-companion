@@ -320,6 +320,11 @@ export function evaluateRegion(region: AnnotationRegion, pronouncer: Pronouncer,
 	return { candidates: dedupeCandidates(candidates), contextKeys };
 }
 
+/** Typed third tone where the spoken reading has a second tone because a third tone follows (lǐ yǔ -> lí yǔ). */
+function isThirdToneSandhi(typed: number, readings: readonly { tone: number }[], index: number): boolean {
+	return typed === 3 && readings[index]?.tone === 2 && readings[index + 1]?.tone === 3;
+}
+
 function matchSuffix(suffix: SuffixData, k: number, chunks: Chunk[], explicit: boolean, allowTypos: boolean): Candidate[] {
 	const typedKey = chunks.map((c) => c.key).join('');
 	const libraryKey = suffix.context.map((r) => r.key).join('');
@@ -331,7 +336,7 @@ function matchSuffix(suffix: SuffixData, k: number, chunks: Chunk[], explicit: b
 		const tones = segments ? typedTones(chunks, segments, explicit) : null;
 		if (!tones) continue;
 		const library = readings.map((r) => r.marked);
-		const conflict = tones.some((t, i) => t !== null && t !== readings[i]?.tone);
+		const conflict = tones.some((t, i) => t !== null && t !== readings[i]?.tone && !isThirdToneSandhi(t, readings, i));
 		if (!conflict) {
 			results.push({ ...base, kind: 'exact', syllables: library, distance: 0, note: 'Reading for this phrase' });
 			continue;

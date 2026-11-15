@@ -78,7 +78,7 @@ As you type, the plugin looks at the line you are typing on. A complete, exact m
 - It only considers an annotation that **ends at your cursor** (a space or punctuation mark typed after it is fine).
 - It replaces the pinyin **only if every typed syllable exactly matches** the reading of the Chinese just before it (after normalizing tone numbers, ü spellings and letter case), and only one interpretation fits.
 - It waits while the annotation may be incomplete. For example, `謝謝 xie` is left alone because you are probably about to type `xie xie`.
-- It never touches pinyin you already typed with tone marks.
+- Pinyin you typed with tone marks is left alone, except that a typed third tone before another third tone is turned into the spoken second tone (`俚語 lǐ yǔ` → `俚語 lí yǔ`).
 - Spelling mistakes and readings that differ from the phrase's reading are **never replaced silently**. A notice offers one button per correction; nothing changes unless you select one.
 - It never runs during Chinese IME composition, only for a single cursor, and never in fenced code blocks, frontmatter, inline code, URLs, link destinations, wiki links or HTML.
 - Each conversion is a separate undo step. If you undo a conversion, it is not reapplied to that annotation.
