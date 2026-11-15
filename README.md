@@ -109,7 +109,7 @@ Segmentation and reading selection come from a dictionary-based library and are 
 
 - By default the output is **dictionary style**, with each character in its citation tone: 一個 yī gè, 不是 bù shì, 你好 nǐ hǎo.
 - **Mark tone changes of 一 and 不** (setting, off by default) uses pinyin-pro's built-in 一/不 rules: 一個 yí gè, 一天 yì tiān, 不是 bú shì, while 第一 and 十一 stay yī.
-- **Third-tone sandhi is never marked** (你好 is always nǐ hǎo). pinyin-pro has an option for it, but chains of third tones depend on prosodic phrasing, so it isn't offered.
+- **Spoken tone changes are marked.** Two third tones in a row are written the way they are said: 你好 is `ní hǎo`, 洗澡 is `xí zǎo`, 老虎 is `láo hǔ`. Chains of three or more third tones (我也很好, 展覽館) are left unchanged, because which syllables change depends on how the speaker groups the words and the sources disagree. 一 and 不 are marked too (`yí gè`, `bú shì`).
 - The output is not a phonetic transcription of connected speech.
 
 **Neutral tones** follow the library's dictionary: 我們 wǒ men, 認識 rèn shi, 頭髮 tóu fa.
@@ -137,7 +137,7 @@ In **Settings → Pinyin Companion → Pronunciation overrides**, add an exact p
 | Only convert inside brackets | Off | Off: pinyin after Chinese converts as soon as it is complete, in brackets or not. On: only pinyin inside brackets converts. |
 | Pronunciation overrides | none | Add/remove exact phrase readings. |
 
-Everything else is fixed: output is space-separated, brackets are removed after converting, spoken tone changes of 一 and 不 are marked, and spelling-mistake suggestions are always offered.
+Everything else is fixed: output is space-separated, brackets are removed after converting, spoken tone changes (一, 不 and two third tones in a row) are marked, and spelling-mistake suggestions are always offered.
 
 ## Other limitations
 

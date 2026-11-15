@@ -50,7 +50,7 @@ describe('Pronouncer readings (values verified against pinyin-pro 3.29.5 + openc
 		expect(readings[3]?.marked).toBe('háng');
 	});
 
-	test('dictionary style by default; 一/不 tone changes only when enabled', () => {
+	test('dictionary style when spoken tone changes are off; 一/不 and third-tone changes when on', () => {
 		expect(read(p, '一個')).toBe('yī gè');
 		expect(read(p, '不是')).toBe('bù shì');
 		const spoken = plain({ markYiBuSandhi: true });
@@ -58,7 +58,9 @@ describe('Pronouncer readings (values verified against pinyin-pro 3.29.5 + openc
 		expect(read(spoken, '一天')).toBe('yì tiān');
 		expect(read(spoken, '不是')).toBe('bú shì');
 		expect(read(spoken, '第一')).toBe('dì yī');
-		expect(read(spoken, '你好')).toBe('nǐ hǎo');
+		expect(read(spoken, '你好')).toBe('ní hǎo');
+		expect(read(spoken, '洗澡')).toBe('xí zǎo');
+		expect(read(p, '你好')).toBe('nǐ hǎo');
 		expect(read(spoken, '一個不是')).toBe('yí gè bú shì');
 		expect(read(p, '一個不是')).toBe('yī gè bù shì');
 	});

@@ -67,7 +67,7 @@ export class Pronouncer {
 		const chars = Array.from(text);
 		if (chars.length === 0) return [];
 		const lookup = readingScript(text);
-		const toneSandhi = this.options.markYiBuSandhi ? { yi: true, bu: true, thirdTone: false } : false;
+		const toneSandhi = this.options.markYiBuSandhi ? { yi: true, bu: true, thirdTone: true } : false;
 		let items = pinyin(lookup, { type: 'all', toneSandhi });
 		if (items.length !== chars.length) {
 			// Defensive: fall back to per-character lookup if alignment is ever lost.
