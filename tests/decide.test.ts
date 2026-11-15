@@ -294,3 +294,18 @@ describe('bracket triggers', () => {
 		expect(outcome).toMatchObject({ type: 'suggest', proposals: [{ insert: 'xué xí', original: '[xueix]' }] });
 	});
 });
+
+describe('closing punctuation between the Chinese and its pinyin', () => {
+	const p = new Pronouncer({ markYiBuSandhi: true, overrides: new Map() });
+	const run = (line: string) => decideAutomatic(line, line.length, p, { separator: 'space', suggestions: true, bracketsOnly: false, removeBrackets: true });
+
+	test.each(['欲速則不達」yu su ze bu da', '「欲速則不達」 yu su ze bu da', '欲速則不達，yu su ze bu da'])('%s converts', (line) => {
+		const outcome = run(line);
+		expect(outcome.type).toBe('apply');
+		if (outcome.type === 'apply') expect(outcome.proposal.insert).toBe('yù sù zé bù dá');
+	});
+
+	test('punctuation does not make unrelated text convert', () => {
+		expect(run('欲速則不達」see page 3').type).toBe('none');
+	});
+});

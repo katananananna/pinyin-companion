@@ -74,6 +74,7 @@ Tip: Obsidian types the closing bracket for you (Settings → Editor → Auto pa
 
 As you type, the plugin looks at the line you are typing on. A complete, exact match converts immediately; less certain cases (such as only the last characters of a longer run) wait for a 0.7 second pause:
 
+- Closing quotes and punctuation between the Chinese and the pinyin are fine: `「欲速則不達」yu su ze bu da` converts.
 - It only considers an annotation that **ends at your cursor** (a space or punctuation mark typed after it is fine).
 - It replaces the pinyin **only if every typed syllable exactly matches** the reading of the Chinese just before it (after normalizing tone numbers, ü spellings and letter case), and only one interpretation fits.
 - It waits while the annotation may be incomplete. For example, `謝謝 xie` is left alone because you are probably about to type `xie xie`.

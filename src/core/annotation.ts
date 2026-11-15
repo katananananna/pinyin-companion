@@ -102,6 +102,9 @@ const SQUARE_OPENERS = new Set(['[', '【', '［']);
 const LINK_FOLLOWERS = new Set(['(', '[', ':']);
 const EMPHASIS_MARKERS = new Set(['*', '_', '~', '=']);
 const MAX_EMPHASIS_MARKERS = 3;
+/** Closing quotes, brackets and sentence punctuation that may sit between the Chinese and its pinyin: 「欲速則不達」yu su ze bu da */
+const TRAILING_PUNCTUATION = new Set(Array.from('」』）》〉】〕］”’﹂﹄，。、；：？！…．'));
+const MAX_TRAILING_PUNCTUATION = 3;
 
 export function parseToken(text: string, from: number): PinyinToken {
 	const token: PinyinToken = { text, from, to: from + text.length, chunks: null, hasToneMarks: false, hasDigits: false };
@@ -153,6 +156,8 @@ function parseTokensAfter(
 	let j = start;
 	// Closing emphasis markers may sit between the Chinese and the pinyin: **回饋** hui kui
 	while (j < cps.length && j - start < MAX_EMPHASIS_MARKERS && EMPHASIS_MARKERS.has(cps[j]?.ch ?? '')) j++;
+	const punctuationStart = j;
+	while (j < cps.length && j - punctuationStart < MAX_TRAILING_PUNCTUATION && TRAILING_PUNCTUATION.has(cps[j]?.ch ?? '')) j++;
 	while (j < cps.length && isWhitespaceChar(cps[j]?.ch ?? '')) j++;
 	const opener = cps[j];
 	const closer = opener ? BRACKET_PAIRS.get(opener.ch) : undefined;
