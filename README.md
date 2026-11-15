@@ -79,7 +79,7 @@ As you type, the plugin looks at the line you are typing on. A complete, exact m
 - It replaces the pinyin **only if every typed syllable exactly matches** the reading of the Chinese just before it (after normalizing tone numbers, ü spellings and letter case), and only one interpretation fits.
 - It waits while the annotation may be incomplete. For example, `謝謝 xie` is left alone because you are probably about to type `xie xie`.
 - Pinyin you typed with tone marks is left alone, except that a typed third tone before another third tone is turned into the spoken second tone (`俚語 lǐ yǔ` → `俚語 lí yǔ`).
-- Spelling mistakes and readings that differ from the phrase's reading are **never replaced silently**. A notice offers one button per correction; nothing changes unless you select one.
+- **Spelling mistakes are fixed automatically** after a 0.7 second pause, when one correction clearly fits (`促進 cu jni` → `促進 cù jìn`, `學習 xueix` → `學習 xué xí`). Very short pinyin (four letters or fewer) is never corrected, and unfinished pinyin is left alone. If more than one correction fits, a notice lets you choose. Undo restores what you typed, and it won't be corrected again.
 - It never runs during Chinese IME composition, only for a single cursor, and never in fenced code blocks, frontmatter, inline code, URLs, link destinations, wiki links or HTML.
 - Each conversion is a separate undo step. If you undo a conversion, it is not reapplied to that annotation.
 - Pasted text, undo/redo and edits made by other plugins never trigger it.
@@ -137,7 +137,7 @@ In **Settings → Pinyin Companion → Pronunciation overrides**, add an exact p
 | Only convert inside brackets | Off | Off: pinyin after Chinese converts as soon as it is complete, in brackets or not. On: only pinyin inside brackets converts. |
 | Pronunciation overrides | none | Add/remove exact phrase readings. |
 
-Everything else is fixed: output is space-separated, brackets are removed after converting, spoken tone changes (一, 不 and two third tones in a row) are marked, and spelling-mistake suggestions are always offered.
+Everything else is fixed: output is space-separated, brackets are removed after converting, spoken tone changes (一, 不 and two third tones in a row) are marked, and spelling mistakes are fixed automatically.
 
 ## Other limitations
 

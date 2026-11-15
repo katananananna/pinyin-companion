@@ -325,3 +325,20 @@ describe('spoken third-tone changes typed with tone marks', () => {
 		expect(run('你好 nī hǎo').type).toBe('none');
 	});
 });
+
+describe('automatic spelling fixes', () => {
+	const p = new Pronouncer({ markYiBuSandhi: true, overrides: new Map() });
+	const run = (line: string, fixTypos: boolean) => decideAutomatic(line, line.length, p, { separator: 'space', suggestions: true, bracketsOnly: false, removeBrackets: true, fixTypos });
+
+	test.each([['促進 cu jni', 'cù jìn'], ['學習 xueix', 'xué xí'], ['你好 ni hoa', 'ní hǎo']])('%s is fixed to %s', (line, expected) => {
+		const outcome = run(line, true);
+		expect(outcome.type).toBe('apply');
+		if (outcome.type === 'apply') expect(outcome.proposal.insert).toBe(expected);
+		expect(run(line, false).type).toBe('suggest');
+	});
+
+	test('unrelated or unfinished text is still left alone', () => {
+		expect(run('促進 cu ji', true).type).toBe('none');
+		expect(run('學習 study', true).type).toBe('none');
+	});
+});

@@ -32,6 +32,7 @@ export default class PinyinCompanionPlugin extends Plugin {
 					decideAutomatic(line, cursor, this.getPronouncer(), {
 						separator: OUTPUT_SEPARATOR,
 						suggestions: true,
+						fixTypos: true,
 						bracketsOnly: this.settings.bracketsOnly,
 						removeBrackets: REMOVE_BRACKETS,
 					}),

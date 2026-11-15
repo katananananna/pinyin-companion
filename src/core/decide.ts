@@ -217,6 +217,8 @@ export interface AutoOptions {
 	/** Only act on pinyin typed inside brackets, e.g. 學習 [xuexi]. */
 	bracketsOnly: boolean;
 	removeBrackets: boolean;
+	/** Apply a single unambiguous spelling correction instead of only suggesting it. */
+	fixTypos?: boolean;
 }
 
 /**
@@ -266,6 +268,8 @@ export function decideAutomatic(line: string, cursor: number, pronouncer: Pronou
 	const proposals = distinctProposals(
 		rest.filter((c) => c.distance === best).map((c) => toProposal(ctx, c)),
 	).filter((p) => !isAlreadyCorrect(p));
+	const only = proposals[0];
+	if (options.fixTypos && proposals.length === 1 && only) return { type: 'apply', proposal: only };
 	return proposals.length > 0 ? { type: 'suggest', proposals } : { type: 'none' };
 }
 
