@@ -137,7 +137,7 @@ In **Settings → Pinyin Companion → Pronunciation overrides**, add an exact p
 | Only convert inside brackets | Off | Off: pinyin after Chinese converts as soon as it is complete, in brackets or not. On: only pinyin inside brackets converts. |
 | Pronunciation overrides | none | Add/remove exact phrase readings. |
 
-Everything else is fixed: output is space-separated, brackets are removed after converting, spoken tone changes (一, 不 and two third tones in a row) are marked, and spelling mistakes are fixed automatically.
+Everything else is fixed: output is space-separated, brackets are removed after converting, and spoken tone changes (一, 不 and two third tones in a row) are marked. **Fix spelling mistakes automatically** is on by default; turn it off to only get a suggestion notice.
 
 ## Other limitations
 

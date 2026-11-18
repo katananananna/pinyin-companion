@@ -153,9 +153,12 @@ class AutoPinyinPlugin implements PluginValue {
 		const head = state.selection.main.head;
 		const line = state.doc.lineAt(head);
 		if (line.length === 0 || line.length > MAX_LINE_LENGTH) return;
-		if (blockContextAt((i) => state.doc.line(i + 1).text, line.number - 1) !== 'none') return;
+		// Cheap line-local checks first; most keystrokes stop here without touching the rest of the note.
+		if (![...line.text].some(isHanChar)) return;
 		const outcome = this.host.decide(line.text, head - line.from);
 		if (outcome.type === 'none') return;
+		// Scanning from the top of the note for fences/frontmatter only happens when there is something to do.
+		if (blockContextAt((i) => state.doc.line(i + 1).text, line.number - 1) !== 'none') return;
 		const first = outcome.type === 'apply' ? outcome.proposal : outcome.proposals[0];
 		if (!first) return;
 		const instant = outcome.type === 'apply' && first.kind === 'exact' && coversWholeRun(line.text, first);

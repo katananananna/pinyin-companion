@@ -17,6 +17,11 @@ export class PinyinCompanionSettingTab extends PluginSettingTab {
 			.setDesc('Off: pinyin typed right after Chinese is converted as soon as it is complete, and pinyin in brackets such as 學習 [xuexi] works too. On: only pinyin inside ( ), [ ], 【 】 or （ ） is converted, so ordinary text is never touched.')
 			.addToggle((toggle) => toggle.setValue(settings.bracketsOnly).onChange((value) => this.plugin.updateSettings({ bracketsOnly: value })));
 
+		new Setting(containerEl)
+			.setName('Fix spelling mistakes automatically')
+			.setDesc('On: when one correction clearly fits (學習 xueix → xué xí), it is applied after a short pause. Off: a notice suggests it and nothing changes until you click.')
+			.addToggle((toggle) => toggle.setValue(settings.autoFixTypos).onChange((value) => this.plugin.updateSettings({ autoFixTypos: value })));
+
 		this.displayOverrides(containerEl);
 	}
 

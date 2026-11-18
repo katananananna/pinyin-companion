@@ -76,7 +76,7 @@ function closesFence(text: string, fence: Fence): boolean {
 /**
  * Whether a line (0-based) is inside YAML frontmatter or a fenced code block
  * (fence lines included). Scans line starts from the top of the note once;
- * only called when a command runs or the idle timer fires, never per keystroke.
+ * automatic mode calls it only after a line already has a conversion to make.
  */
 export function blockContextAt(getLine: (index: number) => string, lineIndex: number, maxScan = MAX_BLOCK_SCAN_LINES): BlockContext {
 	if (lineIndex > maxScan) return 'unknown';

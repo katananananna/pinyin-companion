@@ -1,6 +1,6 @@
 {
 	"name": "pinyin-companion",
-	"version": "0.3.5",
+	"version": "0.3.6",
 	"description": "Obsidian plugin: add tone-marked pinyin after Chinese text, using the Chinese as the source of truth.",
 	"main": "main.js",
 	"type": "module",
@@ -33,7 +33,7 @@
 		"typescript-eslint": "^8.59.1",
 		"vitest": "5.1.0"
 	},
-	"author": "",
+	"author": "Katana",
 	"dependencies": {
 		"opencc-js": "1.4.2",
 		"pinyin-pro": "3.29.5"

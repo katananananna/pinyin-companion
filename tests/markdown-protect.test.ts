@@ -82,6 +82,8 @@ describe('settings sanitising', () => {
 		expect(sanitizeSettings({ bracketsOnly: 'yes' }).bracketsOnly).toBe(false);
 		expect(sanitizeSettings({ autoTrigger: 'brackets', autoMode: false, idleDelayMs: 2000 }).bracketsOnly).toBe(true);
 		expect(sanitizeSettings({ autoTrigger: 'anywhere' }).bracketsOnly).toBe(false);
+		expect(sanitizeSettings({}).autoFixTypos).toBe(true);
+		expect(sanitizeSettings({ autoFixTypos: false }).autoFixTypos).toBe(false);
 	});
 
 	test('does not mutate the defaults', () => {

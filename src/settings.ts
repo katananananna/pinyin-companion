@@ -5,6 +5,8 @@ import { Pronouncer } from './core/pronouncer';
 export interface PinyinCompanionSettings {
 	/** Only convert pinyin typed inside brackets, never plain text after Chinese. */
 	bracketsOnly: boolean;
+	/** Apply a single clear spelling correction automatically; off = only suggest it in a notice. */
+	autoFixTypos: boolean;
 	overrides: OverrideEntry[];
 }
 
@@ -15,6 +17,7 @@ export const MARK_YI_BU_SANDHI = true;
 
 export const DEFAULT_SETTINGS: Readonly<PinyinCompanionSettings> = Object.freeze({
 	bracketsOnly: false,
+	autoFixTypos: true,
 	overrides: [],
 });
 
@@ -38,6 +41,7 @@ export function sanitizeSettings(raw: unknown): PinyinCompanionSettings {
 	const data = isRecord(raw) ? raw : {};
 	return {
 		bracketsOnly: data.bracketsOnly === true || data.autoTrigger === 'brackets',
+		autoFixTypos: data.autoFixTypos !== false,
 		overrides: sanitizeOverrides(data.overrides),
 	};
 }
