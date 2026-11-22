@@ -7,6 +7,9 @@ import { createPronouncer, OUTPUT_SEPARATOR, REMOVE_BRACKETS, sanitizeSettings, 
 import { PinyinCompanionSettingTab } from './settings-tab';
 import { SuggestionNotices } from './ui/suggestion-notice';
 
+/** Selections with at least one Chinese character get the menu item. */
+const HAS_CHINESE = /\p{Script=Han}/u;
+
 export default class PinyinCompanionPlugin extends Plugin {
 	settings: PinyinCompanionSettings = sanitizeSettings(undefined);
 	private pronouncer: Pronouncer | null = null;
@@ -25,6 +28,19 @@ export default class PinyinCompanionPlugin extends Plugin {
 			name: 'Correct pinyin annotation at cursor',
 			editorCallback: (editor) => correctPinyinAtCursor(editor, this.commandContext()),
 		});
+
+		// Right-click (or long-press on mobile) selected Chinese: "Show pinyin after selection".
+		this.registerEvent(
+			this.app.workspace.on('editor-menu', (menu, editor) => {
+				if (!HAS_CHINESE.test(editor.getSelection())) return;
+				menu.addItem((item) =>
+					item
+						.setTitle('Show pinyin after selection')
+						.setIcon('languages')
+						.onClick(() => insertPinyinAfterSelection(editor, this.commandContext())),
+				);
+			}),
+		);
 
 		this.registerEditorExtension(
 			createAutoPinyinExtension({

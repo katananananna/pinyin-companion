@@ -59,6 +59,10 @@ The commands also work inside code blocks and frontmatter, because you ran them 
 
 If the text after the Chinese doesn't resemble the pinyin closely enough (for example `我用 Obsidian` or `我喜歡 coffee`), nothing changes and a notice explains why.
 
+## Right-click: show pinyin for selected Chinese
+
+Don't know the pinyin? Select the Chinese word or sentence (it can be on one line, up to 200 characters), right-click it (long-press on mobile) and choose **Show pinyin after selection**. The pinyin is typed right after it, with tone marks, using the sentence for the right reading. It is the same as the **Insert pinyin after selected Chinese** command, just one click away.
+
 ## Automatic mode
 
 Always on, so you don't need the command palette: just type.
